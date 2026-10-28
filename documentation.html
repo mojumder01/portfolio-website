@@ -590,7 +590,7 @@
       <pre><code>&lt;!-- About section avatar --&gt;
 &lt;div class="avatar-initials"&gt;AM&lt;/div&gt;
 &lt;!-- Replace with: --&gt;
-&lt;img src="assets/photo.jpg" alt="Your Name" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" /&gt;</code></pre>
+&lt;img src="assets/photo.jpg" alt="Your Name" style="width:100%; height:100%; object-fit:cover; border-radius:30px;" /&gt;</code></pre>
     </section>
 
     <!-- ═════════════════════════════════════
@@ -637,6 +637,11 @@
       <h3>Change Default Theme (Dark/Light)</h3>
       <pre><code>&lt;!-- Change "dark" to "light" for light mode default --&gt;
 &lt;html lang="en" data-theme="light" data-color="purple"&gt;</code></pre>
+
+      <div class="note note-tip">
+        <span class="note-icon">💡</span>
+        <p>Once someone picks a color or theme in the switcher, their browser remembers that choice and uses it instead of the default. If you changed the default but still see the old one, clear the site data for the page (or open it in a private window).</p>
+      </div>
     </section>
 
     <!-- ═════════════════════════════════════
@@ -645,7 +650,7 @@
     <section class="doc-section" id="typing">
       <h2>✍️ Typing Animation</h2>
 
-      <p>Open <code>js/script.js</code> and find the <code>roles</code> array (around line 60). Edit the strings to whatever you want to type:</p>
+      <p>Open <code>js/script.js</code> and find the <code>roles</code> array in section <strong>7. TYPING ANIMATION</strong>. Edit the strings to whatever you want to type:</p>
 
       <pre><code>// CHANGE: Update these strings with your own skills/services
 const roles = [
@@ -740,7 +745,7 @@ const roles = [
 
       <div class="note note-warning">
         <span class="note-icon">⚠️</span>
-        <p>If you add or remove testimonial cards, also update the <strong>slider dots</strong> in the HTML and the <strong>total</strong> variable in <code>js/script.js</code> is calculated automatically from the dot count.</p>
+        <p>If you add or remove testimonial cards, add or remove a matching <strong>slider dot</strong> too. The slider counts the dots to know how many slides there are, so every card needs one.</p>
       </div>
 
       <pre><code>&lt;div class="testimonial-card"&gt;
@@ -768,7 +773,7 @@ const roles = [
       <p>The contact form uses <code>mailto:</code> — when submitted, it opens the visitor's default email client with a pre-filled message. No backend or server is required.</p>
 
       <h3>Update Your Email Address</h3>
-      <p>Open <code>js/script.js</code> and find the contact form section (around line 230):</p>
+      <p>Open <code>js/script.js</code> and find section <strong>16. CONTACT FORM</strong>:</p>
 
       <pre><code>// CHANGE: Replace with your email address
 window.location.href = `mailto:hello@alexmorgan.dev?subject=...`;</code></pre>
@@ -777,12 +782,15 @@ window.location.href = `mailto:hello@alexmorgan.dev?subject=...`;</code></pre>
 
       <div class="note note-info">
         <span class="note-icon">ℹ️</span>
-        <p>For a real contact form that sends emails without opening a mail client, consider using <a href="https://formspree.io" target="_blank">Formspree</a> (free plan available). Just replace the form's action URL.</p>
+        <p>For a real contact form that sends emails without opening a mail client, consider using <a href="https://formspree.io" target="_blank" rel="noopener">Formspree</a> (free plan available). Just add an action URL to the form.</p>
       </div>
 
       <h3>Using Formspree (Optional)</h3>
-      <pre><code>&lt;!-- Replace the form tag to use Formspree --&gt;
-&lt;form action="https://formspree.io/f/YOUR_FORM_ID" method="POST"&gt;</code></pre>
+      <p>Add <code>action</code> and <code>method</code> to the form tag. When the form has an <code>action</code>, the script stops using <code>mailto:</code> and lets the form submit normally.</p>
+      <pre><code>&lt;!-- Add action + method to the form tag to use Formspree --&gt;
+&lt;form class="contact-form" id="contactForm"
+      action="https://formspree.io/f/YOUR_FORM_ID" method="POST"&gt;</code></pre>
+      <p>Also delete or reword the <code>.form-note</code> line under the button. It says the form opens an email client, which is no longer true.</p>
     </section>
 
     <hr />

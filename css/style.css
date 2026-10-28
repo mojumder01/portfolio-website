@@ -346,6 +346,7 @@ body.cursor-hover .cursor-ring {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 48px;
   overflow: hidden;
   padding: 100px 24px 60px;
 }
@@ -1268,7 +1269,7 @@ body.cursor-hover .cursor-ring {
 
 .cdot:hover { transform: scale(1.2); }
 
-.cdot.active { border-color: white; transform: scale(1.15); }
+.cdot.active { border-color: var(--text); transform: scale(1.15); }
 
 /* Color dot backgrounds */
 .cdot[data-color="purple"] { background: #7c4dff; }
@@ -1299,11 +1300,11 @@ body.cursor-hover .cursor-ring {
 /* ═══════════════════════════════════════════
    HERO PHOTO — right side of hero
 ═══════════════════════════════════════════ */
+/* Sits beside the hero text (not absolutely positioned) so it never overlaps it */
 .hero-photo-wrap {
-  position: absolute;
-  right: 8%;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
   width: 320px;
   height: 320px;
   display: flex;
@@ -1593,10 +1594,6 @@ body.cursor-hover .cursor-ring {
   background: var(--primary);
   border-color: var(--primary);
   color: white;
-}
-
-.project-card {
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .project-card.hidden {

@@ -10,34 +10,51 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1. PRELOADER
   // ─────────────────────────────────────────
   const preloader = document.getElementById('preloader');
+  const hidePreloader = () => preloader.classList.add('done');
 
   window.addEventListener('load', () => {
-    setTimeout(() => {
-      preloader.classList.add('done');
-    }, 1200);
+    setTimeout(hidePreloader, 1200);
   });
+
+  // Fallback — don't keep the page covered if a slow font/image delays "load"
+  setTimeout(hidePreloader, 5000);
+
+  // ─────────────────────────────────────────
+  // localStorage wrapper — browsers throw when storage is blocked
+  // (privacy mode, cookies disabled, sandboxed iframes). Without this,
+  // one error would stop the whole script and leave every section hidden.
+  // ─────────────────────────────────────────
+  const storage = {
+    get(key) {
+      try { return localStorage.getItem(key); } catch (e) { return null; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, value); } catch (e) { /* not saved — fine */ }
+    }
+  };
 
   // ─────────────────────────────────────────
   // 2. THEME TOGGLE — dark ↔ light
-  // Saved to localStorage so it persists on refresh
+  // Saved to localStorage so it persists on refresh.
+  // Default comes from data-theme on the <html> tag.
   // ─────────────────────────────────────────
   const html      = document.documentElement;
   const themeBtn  = document.getElementById('themeBtn');
   const themeIcon = document.getElementById('themeIcon');
   const themeLabel = document.getElementById('themeLabel');
 
-  const savedTheme = localStorage.getItem('portfolio-theme') || 'dark';
-  setTheme(savedTheme);
+  const savedTheme = storage.get('portfolio-theme');
+  setTheme(['dark', 'light'].includes(savedTheme) ? savedTheme : html.getAttribute('data-theme') || 'dark');
 
   themeBtn.addEventListener('click', () => {
-    const current = html.getAttribute('data-theme');
-    setTheme(current === 'dark' ? 'light' : 'dark');
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    storage.set('portfolio-theme', next);
     resizeParticles();
   });
 
   function setTheme(theme) {
     html.setAttribute('data-theme', theme);
-    localStorage.setItem('portfolio-theme', theme);
     themeIcon.textContent  = theme === 'dark' ? '🌙' : '☀️';
     themeLabel.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
   }
@@ -61,27 +78,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Load saved color scheme
-  const savedColor = localStorage.getItem('portfolio-color') || 'purple';
-  setColor(savedColor);
+  // Load saved color scheme — ignore values that no longer have a color dot.
+  // Default comes from data-color on the <html> tag.
+  const colors     = [...colorDots].map(d => d.dataset.color);
+  const savedColor = storage.get('portfolio-color');
+  setColor(colors.includes(savedColor) ? savedColor : html.getAttribute('data-color') || 'purple');
 
   colorDots.forEach(dot => {
     dot.addEventListener('click', () => {
       setColor(dot.dataset.color);
+      storage.set('portfolio-color', dot.dataset.color);
       resizeParticles();
     });
   });
 
   function setColor(color) {
     html.setAttribute('data-color', color);
-    localStorage.setItem('portfolio-color', color);
     colorDots.forEach(d => d.classList.toggle('active', d.dataset.color === color));
   }
 
   // ─────────────────────────────────────────
   // 4. NAVBAR — shadow on scroll
   // ─────────────────────────────────────────
-  const navbar = document.getElementById('navbar');
+  const navbar  = document.getElementById('navbar');
+  const backTop = document.getElementById('backTop');
 
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 50);
@@ -186,12 +206,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        const bar = entry.target.querySelector('.skill-bar');
+        const el = entry.target;
+        el.classList.add('visible');
+        const bar = el.querySelector('.skill-bar');
         if (bar) {
           bar.style.width = getComputedStyle(bar).getPropertyValue('--w');
         }
-        revealObserver.unobserve(entry.target);
+        // Once faded in, drop .reveal — its transform and stagger delay
+        // would otherwise block the card hover effects
+        el.addEventListener('transitionend', function revealed(e) {
+          if (e.target !== el || e.propertyName !== 'opacity') return;
+          el.classList.remove('reveal');
+          el.removeEventListener('transitionend', revealed);
+        });
+        revealObserver.unobserve(el);
       }
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
@@ -207,13 +235,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function triggerCounters() {
     if (countersRan) return;
-    counters.forEach(counter => {
-      const rect = counter.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.85) {
-        countersRan = true;
-        runCounters();
-      }
-    });
+    const inView = [...counters].some(counter =>
+      counter.getBoundingClientRect().top < window.innerHeight * 0.85
+    );
+    if (inView) {
+      countersRan = true;
+      runCounters();
+    }
   }
 
   function runCounters() {
@@ -427,8 +455,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // 15. BACK TO TOP BUTTON
   // ─────────────────────────────────────────
-  const backTop = document.getElementById('backTop');
-
   backTop.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -436,10 +462,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // 16. CONTACT FORM
   // CHANGE: Update email address below
+  // If you give the <form> an action (e.g. Formspree), this is skipped
+  // and the form submits normally.
   // ─────────────────────────────────────────
   const contactForm = document.getElementById('contactForm');
 
   contactForm.addEventListener('submit', (e) => {
+    if (contactForm.hasAttribute('action')) return;
     e.preventDefault();
 
     const name    = document.getElementById('name').value.trim();
@@ -461,9 +490,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────────────────────
   // 17. SMOOTH SCROLL for all anchor links
   // ─────────────────────────────────────────
+  // Looked up by id — querySelector throws on placeholder links like href="#"
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', (e) => {
-      const target = document.querySelector(anchor.getAttribute('href'));
+      const target = document.getElementById(anchor.getAttribute('href').slice(1));
       if (target) {
         e.preventDefault();
         window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
